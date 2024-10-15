@@ -39,5 +39,21 @@ jobs:
           ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
             nohup sudo serve -l 80 -s ~/build &
           ENDSSH
-          
+
 # sudo serve -l 80 -s ~/build
+# Dieser Befehl startet den serve-Prozess im Vordergrund.
+# Der Server läuft nur so lange, wie die SSH-Sitzung aktiv ist.
+# Wenn du dich von der SSH-Sitzung abmeldest oder die Verbindung
+# unterbrichst, wird der Server gestoppt.
+
+# ------------------------------------------
+
+# nohup sudo serve -l 80 -s ~/build &
+# Der Befehl startet den serve-Prozess im Hintergrund,
+# selbst wenn die SSH-Sitzung geschlossen wird.
+# nohup (No Hang Up) sorgt dafür, dass der Prozess weiterläuft,
+# auch wenn du die SSH-Verbindung trennst.
+# Das & am Ende des Befehls weist an, den Prozess im
+# Hintergrund zu starten.
+# Dadurch kannst du die SSH-Verbindung trennen, und der Server
+# bleibt weiterhin aktiv.
