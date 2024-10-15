@@ -37,5 +37,7 @@ jobs:
       - name: Start Calculator on EC2
         run: |
           ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
-            sudo serve -l 80 -s ~/build
+            nohup sudo serve -l 80 -s ~/build &
           ENDSSH
+          
+# sudo serve -l 80 -s ~/build
