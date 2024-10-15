@@ -24,7 +24,7 @@ jobs:
 
       - name: SSH Connection
         run: |
-          sudo ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
+          ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
             sudo yum update -y
             sudo yum upgrade -y
             sudo yum install -y nodejs
@@ -37,5 +37,5 @@ jobs:
       - name: Start Calculator on EC2
         run: |
           ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
-          sudo serve -l 80 -s ~/build
+            sudo serve -l 80 -s ~/build
           ENDSSH
