@@ -23,7 +23,7 @@ jobs:
 
       - name: SSH Connection
         run: |
-          ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
+          sudo ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
             sudo yum update -y
             sudo yum upgrade -y
             sudo yum install -y nodejs
