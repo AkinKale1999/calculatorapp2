@@ -43,7 +43,7 @@ jobs:
       - name: Start Docker Container on EC2
         run: |
           ssh -i ~/.ssh/meinPrivateKey ec2-user@${{ secrets.EC2_IP }} << 'ENDSSH'
-              docker rm -rf $(docker ps -a -q)
+              docker rm -r $(docker ps -a -q)
               docker run -d -p 80:3000 --name calculatorapp "${{secrets.DOCKERHUB_USERNAME}}"/mycalculatorapp:latest
           ENDSSH
 
