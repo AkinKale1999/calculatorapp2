@@ -1,4 +1,4 @@
-name: Deploy on EC2
+name: Docker build und EC2 verbindung automatisieren
 
 on: push
 
@@ -10,50 +10,41 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: build repo
+      - name: Build Docker Image
         run: |
-          npm install
-          npm run build
+          docker build -t "${{ secrets.DOCKERHUB_USERNAME }}"/mycalculatorapp:latest .
+
+        run: docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin | "${{ secrets.DOCKERHUB_TOKEN }}"
+
+      - name: Docker push
+        run: |
+          docker push "${{ secrets.DOCKERHUB_USERNAME }}"/mycalculatorapp:latest
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{secrets.SSH_KEY}}" > ~/.ssh/meinPrivateKey
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/meinPrivateKey
           chmod 600 ~/.ssh/meinPrivateKey
-          ssh-keyscan -H ${{secrets.EC2_IP}} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.EC2_IP }} >> ~/.ssh/known_hosts
 
-      - name: SSH Connection
+      - name: SSH Connection to EC2
         run: |
-          ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
+          ssh -i ~/.ssh/meinPrivateKey ec2-user@${{ secrets.EC2_IP }} << 'ENDSSH'
             sudo yum update -y
             sudo yum upgrade -y
-            sudo yum install -y nodejs
-            sudo npm install -g serve
+            sudo yum install docker -y
+            sudo systemctl enable docker.service
+            sudo systemctl start docker.service
+            sudo usermode -aG docker ec2-user
+            sudo docker pull "${{ secrets.DOCKERHUB_USERNAME }}"/mycalculatorapp:latest
           ENDSSH
 
-      - name: Copy build to EC2
-        run: scp -i ~/.ssh/meinPrivateKey -r build ec2-user@${{secrets.EC2_IP}}:/home/ec2-user/build
-
-      - name: Start Calculator on EC2
+      - name: Start Docker Container on EC2
         run: |
-          ssh -i ~/.ssh/meinPrivateKey ec2-user@${{secrets.EC2_IP}} << 'ENDSSH'
-            nohup sudo serve -l 80 -s ~/build &
+          ssh -i ~/.ssh/meinPrivateKey ec2-user@${{ secrets.EC2_IP }} << 'ENDSSH'
+              docker run -d -p 80:3000 mycalculatorapp:latest
           ENDSSH
 
-# sudo serve -l 80 -s ~/build
-# Dieser Befehl startet den serve-Prozess im Vordergrund.
-# Der Server läuft nur so lange, wie die SSH-Sitzung aktiv ist.
-# Wenn du dich von der SSH-Sitzung abmeldest oder die Verbindung
-# unterbrichst, wird der Server gestoppt.
-
-# ------------------------------------------
-
-# nohup sudo serve -l 80 -s ~/build &
-# Der Befehl startet den serve-Prozess im Hintergrund,
-# selbst wenn die SSH-Sitzung geschlossen wird.
-# nohup (No Hang Up) sorgt dafür, dass der Prozess weiterläuft,
-# auch wenn du die SSH-Verbindung trennst.
-# Das & am Ende des Befehls weist an, den Prozess im
-# Hintergrund zu starten.
-# Dadurch kannst du die SSH-Verbindung trennen, und der Server
-# bleibt weiterhin aktiv.
+      # - name: Clean Up SSH Key File (optional)
+      #   run: |
+      #     rm meinPrivateKey
